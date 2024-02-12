@@ -133,3 +133,5 @@ dmypy.json
 
 # Other
 .vscode/*
+*.nc
+*.csv
