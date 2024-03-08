@@ -136,3 +136,4 @@ dmypy.json
 *.nc
 *.csv
 *nohup.out
+data/nohup.out
