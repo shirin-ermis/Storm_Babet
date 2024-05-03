@@ -17,7 +17,7 @@ class Met():
     def __init__(self):
         self.status = None
     
-    def calc_ivt(q, u, v, toplevel=300):
+    def calc_ivt(q, u, v, toplevel=250):
         """
         Function to calculate integrated vapor transport.
         Definition to calculate integrated vapor transport.
@@ -46,6 +46,6 @@ class Met():
         g = 9.81
 
         # Calculate IVT
-        vt = ((q * v)**2 + (q * u)**2)*(1/2) # vapour transport on all pressure levels
+        vt = ((q * v)**2 + (q * u)**2)**(1/2) # vapour transport on all pressure levels
         ivt = vt.sel(level=slice(toplevel, 1000)).integrate('level') / g
         return ivt
