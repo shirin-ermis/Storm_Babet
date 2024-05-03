@@ -20,51 +20,30 @@ class Data():
     def preproc_ds(ds):
         """
         Main pre-processing function
-        Writtten by Nick Leach.
+        Writtten by Nick Leach and Shirin Ermis.
 
         Input:
         ------
+        ds: xarray dataset
 
         Output:
         -------
+        ds1: xarray dataset with inidate dimension added
         """
-
-        # accumulated variables & scaling factors
-        accumulated_vars = {'tp': 60 * 60 * 24 * 1e3,
-                            'ttr': 1,
-                            'tsr': 1,
-                            'str': 1,
-                            'ssr': 1,
-                            'e': 1}
-        accumulated_var_newunits = {'tp': 'mm day$^{-1}$',
-                                    'ttr': 'W m$^{-2}$',
-                                    'tsr': 'W m$^{-2}$',
-                                    'str': 'W m$^{-2}$',
-                                    'ssr': 'W m$^{-2}$',
-                                    'e': 'm s$^{-1}$'}
-        ds = ds.copy().squeeze()
+        # remove any dimensions of length 1
+        ds1 = ds.copy().squeeze()
         # set up aux data
-        inidate = pd.to_datetime(ds.time[0].values)
+        inidate = pd.to_datetime(ds1.time[0].values)
         # expand dimensions to include extra info
-        if not 'hDate' in ds:
-            ds = ds.expand_dims({'inidate': [inidate]}).copy()
+        if not 'hDate' in ds1:
+            ds1 = ds1.expand_dims({'inidate': [inidate]}).copy()
 
-        if not 'number' in ds:
-            ds = ds.expand_dims({'number': [0]}).copy()
+        if not 'number' in ds1:
+            ds1 = ds1.expand_dims({'number': [0]}).copy()
 
         # put time dimension at front
-        ds = ds.transpose('time', ...)
-        ds = ds.copy(deep=True)
-
-        # convert accumulated variables into instantaneous
-        for var, sf in accumulated_vars.items():
-            if var in ds.keys():
-                ds[var].loc[dict(time=ds.time[1:])] = Data.accum2rate(ds[var]) * sf
-                # set first value to equal zero,
-                # should be zero but isn't always
-                ds[var].loc[dict(time=ds.time[0])] = 0
-                ds[var].attrs['units'] = accumulated_var_newunits[var]
-        return ds
+        ds1 = ds1.transpose('time', ...)
+        return ds1
     
     def accum2rate(ds):
         """
