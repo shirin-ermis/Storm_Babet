@@ -47,5 +47,5 @@ class Met():
 
         # Calculate IVT
         vt = ((q * v)**2 + (q * u)**2)*(1/2) # vapour transport on all pressure levels
-        ivt = vt.sel(level=slice(1000, toplevel)).integrate('level') / g
+        ivt = vt.sel(level=slice(toplevel, 1000)).integrate('level') / g
         return ivt
