@@ -99,3 +99,25 @@ class Data():
         # change time coord to hours coord + rename
         ds = ds.assign_coords(time=ds_hours).rename(dict(time='hour'))
         return ds
+    
+    def hourly2accum(ds, start_day='2023-10-18 09', end_day='2023-10-22 00', m2mm=True):
+        """
+        Function to convert hourly precipitation to accumulated precipitation in mm.
+        Also truncates the data to the desired time period.
+
+        Input:
+        ------
+        ds: xarray dataset
+
+        Output:
+        -------
+        ds_out: xarray dataset with precipitation accumulated in mm.
+        """
+        if m2mm:
+            factor = 1000
+        else:
+            factor = 1
+        ds_out = ds.copy(deep=True).sel(time=slice(start_day, end_day))
+        ds_out['tp'] = ds_out.tp.cumsum(dim='time')*factor  # sum and convert to mm
+
+        return ds_out
