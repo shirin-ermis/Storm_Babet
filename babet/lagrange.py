@@ -38,7 +38,7 @@ class Lagrange():
 
     def import_medr_tracks_TE(fpath):
         '''
-        Funtion toimport medium range tracks from
+        Funtion to import medium range tracks from
         Tempest Extremes algorithm
         Written by Nick Leach.
 
@@ -52,13 +52,9 @@ class Lagrange():
 
         df = pd.read_csv(fpath, skipinitialspace=True)
 
-        expdict = {'1': 'ENS',
-                   'b2nn': 'pi',
-                   'b2nq': 'pi',
-                   'b2ns': 'pi',
-                   'b2no': 'incr',
-                   'b2nr': 'incr',
-                   'b2nt': 'incr'}
+        expdict = {'b2rc': 'curr',
+                   'b2re': 'incr',
+                   'b2rr': 'pi'}
 
         fname = fpath.split('/')[-1]
         _, expid, inidate, mem = fname.split('_')
