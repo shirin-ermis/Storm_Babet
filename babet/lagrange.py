@@ -148,13 +148,13 @@ class Lagrange():
 
             # get the instantaneous fields + wind speeds
             if sfc:
-                mem_fields_out = mem_fields.get(['sst',
-                                                 'u10',
+                mem_fields_out = mem_fields.get(['u10',
                                                  'v10',
                                                  'msl',
                                                  'u100',
                                                  'v100',
                                                  'fg10',
+                                                 't2m',
                                                  'tp',
                                                  'tcwv']).sel(time=time_intersection)
                 mem_fields_out['ws10'] = np.sqrt(mem_fields_out.u10**2 + mem_fields_out.v10**2)
