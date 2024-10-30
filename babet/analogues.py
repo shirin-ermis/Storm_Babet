@@ -633,7 +633,7 @@ class Analogues():
             year = int(date_list[each][4:8])
             month = calendar.month_abbr[int(date_list[each][8])]
             day = int(date_list[each][-2:])
-            field_list.append(pull_out_day_lentis(psi, real, year, month, day))
+            field_list.append(Analogues.pull_out_day_lentis(psi, real, year, month, day))
         sig_field = field_list[0].data
         a, b = np.shape(field_list[0].data)
         for i in range(a):
