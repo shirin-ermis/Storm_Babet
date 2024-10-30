@@ -10,3 +10,4 @@ from .version_info import VERSION_INT, VERSION  # noqa
 from .data import Data    # noqa
 from .met import Met      # noqa
 from .lagrange import Lagrange  # noqa
+from .analogues import Analogues  # noqa
