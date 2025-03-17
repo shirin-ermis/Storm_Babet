@@ -2,6 +2,7 @@ import xarray as xr
 import os
 import babet as bb
 import dask
+dask.config.set(**{'array.slicing.split_large_chunks': True})
 
 def calc_advection_q_all_fast(ds):
     """
@@ -105,18 +106,24 @@ if __name__ == '__main__':
     lower = 1000
     
     # Import forecast data 
+    print('Importing forecast data...')
     base_dir = '/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/MED-R/EXP/{}/EU025/pl/pf'
     exp = {}
     for experiment in experiments:
         exp[experiment] = xr.open_mfdataset(os.path.join(base_dir.format(experiment), '*.nc'), preprocess=bb.Data.preproc_ds)
 
     # Calculate the mass-weighted moisture advection
+    print('Calculating moisture advection...')
     adv = {experiment: vert_average_q_advection_fast(exp[experiment], upper=upper, lower=lower) for experiment in ['pi', 'curr', 'incr']}
     adv_combined = combine_xarray_dict(adv)
 
     # Calculate mean over event
-    adv_combined_mean = adv_combined.sel(time=slice('2023-10-19 00', '2023-10-22 00'), inidate=['2023-10-15', '2023-10-17']).mean(dim='time')
+    print('Calculating event mean...')
+    adv_combined_mean = adv_combined.sel(time=slice('2023-10-19 00', '2023-10-22 00'), inidate=['2023-10-15', '2023-10-17']).mean(dim='time').mass_weighted_vdq.compute()
 
     # Save the dataset to a netCDF file
-    adv_combined_mean.to_netcdf(f'data/09_vert_integrated_adv_{lower}hPa_to_{upper}hPa.nc')
+    save_dir = '/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/advection/'
+    fpath = os.path.join(save_dir, f'09_vert_integrated_adv_{lower}hPa_to_{upper}hPa_event-mean.nc')
+    print(f'Saving the dataset to {fpath}...')
+    adv_combined_mean.to_netcdf(os.path.join(save_dir, f'09_vert_integrated_adv_{lower}hPa_to_{upper}hPa_event-mean.nc'))
 
