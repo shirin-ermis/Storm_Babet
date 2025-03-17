@@ -2,6 +2,10 @@ import xarray as xr
 import os
 import babet as bb
 import dask
+import matplotlib.pyplot as plt
+import cmcrameri as cm
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
 def calc_advection_q_all_fast(ds):
@@ -122,8 +126,26 @@ if __name__ == '__main__':
     adv_combined_mean = adv_combined.sel(time=slice('2023-10-19 00', '2023-10-22 00'), inidate=['2023-10-15', '2023-10-17']).mean(dim='time').mass_weighted_vdq.compute()
 
     # Save the dataset to a netCDF file
-    save_dir = '/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/advection/'
-    fpath = os.path.join(save_dir, f'09_vert_integrated_adv_{lower}hPa_to_{upper}hPa_event-mean.nc')
-    print(f'Saving the dataset to {fpath}...')
-    adv_combined_mean.to_netcdf(os.path.join(save_dir, f'09_vert_integrated_adv_{lower}hPa_to_{upper}hPa_event-mean.nc'))
+    # save_dir = '/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/advection/'
+    # fpath = os.path.join(save_dir, f'09_vert_integrated_adv_{lower}hPa_to_{upper}hPa_event-mean.nc')
+    # print(f'Saving the dataset to {fpath}...')
+    # adv_combined_mean.to_netcdf(os.path.join(save_dir, f'09_vert_integrated_adv_{lower}hPa_to_{upper}hPa_event-mean.nc'))
+
+    # test plot
+    uk = [-11, 10, 48, 70]  # UK map extent
+    # Create the contour plot with subplots
+    g = adv.mass_weighted_vdq.sel(inidate='2023-10-15').mean('number').plot.contourf(
+        col='experiment', cmap=cm.broc_r, vmin=-0.00008, vmax=0.00008,
+        levels=20,
+        subplot_kws={'projection': ccrs.PlateCarree()}  # Set projection for subplots
+    )
+
+    # Loop through each subplot and apply Cartopy settings
+    for ax in g.axes.flat:  # Flatten in case of multiple subplots
+        ax.set_extent(uk, crs=ccrs.PlateCarree())  # Set map extent
+        ax.add_feature(cfeature.LAND, edgecolor='black', linewidth=0.8)  # Land borders
+        ax.add_feature(cfeature.OCEAN, facecolor='white')  # Mask ocean
+        ax.coastlines()  # Add coastlines for more detail
+    
+    plt.savefig('notebooks/figures/09_test.png')
 
