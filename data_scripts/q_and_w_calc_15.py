@@ -7,36 +7,8 @@ import matplotlib.pyplot as plt
 from cmcrameri import cm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-# from 09_vert_integrated_advection import combine_xarray_dict
+from vert_integrated_advection_09 import combine_xarray_dict
 dask.config.set(**{'array.slicing.split_large_chunks': True})
-
-def combine_xarray_dict(exp, dim_name="experiment"):
-    """
-    Combine a dictionary of xarray datasets into a single dataset along a new dimension.
-
-    Parameters
-    ----------
-    exp : dict of {str: xr.Dataset}
-        Dictionary where keys are experiment names and values are xarray datasets.
-    dim_name : str, optional
-        Name of the new dimension to combine along (default is "experiment").
-
-    Returns
-    -------
-    xr.Dataset
-        A combined dataset with an additional dimension corresponding to dictionary keys.
-    """
-    # Convert dictionary to a list of datasets and extract keys
-    datasets = list(exp.values())
-    keys = list(exp.keys())
-
-    # Add the new dimension as a coordinate
-    expanded_datasets = [ds.assign_coords({dim_name: key}) for ds, key in zip(datasets, keys)]
-
-    # Concatenate along the new dimension
-    combined_ds = xr.concat(expanded_datasets, dim=dim_name)
-
-    return combined_ds
 
 def calc_average_w(ds, lower=850, upper=250):
     
