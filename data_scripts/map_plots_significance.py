@@ -38,7 +38,7 @@ def preproc_ds_v2(ds):
     ds1 = ds1.transpose('time', ...)
     return ds1
 
-def bootstrap_sample(data, n_iterations=1000):
+def bootstrap_sample(data, n_iterations=10000):
     """Bootstrap resampling with replacement."""
     means = np.array([
         np.mean(np.random.choice(data, size=len(data), replace=True))
@@ -69,7 +69,8 @@ if __name__ == '__main__':
     for e, exp in enumerate(['pi', 'pi_1950', 'curr', 'incr']):
         tmp.append(xr.open_mfdataset(os.path.join(base_dir.format(exp), '*.nc'), engine='netcdf4', preprocess=preproc_ds_v2).expand_dims(climate=[climates[e]]))
     ifs = xr.concat(tmp, dim='climate')
-    ifs['tp'] = ((ifs.tp.sel(time='2023-10-22 00') - ifs.tp.sel(time='2023-10-19 00'))*1000).sel(latitude=slice(uk[3], uk[2]), longitude=slice(uk[0], uk[1]))
+    ifs = ifs.sel(latitude=slice(uk[3], uk[2]), longitude=slice(uk[0], uk[1]))
+    ifs['tp'] = ((ifs.tp.sel(time='2023-10-22 00') - ifs.tp.sel(time='2023-10-19 00'))*1000)
 
     # MICAS
     micas = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/access-micas/micas_clean.nc')
@@ -88,7 +89,7 @@ if __name__ == '__main__':
         output_core_dims=[["percentile"]],  # Output contains percentiles
     )
     era5_analogues_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/era5_analogues_tp_sign_map.nc')
-
+    # print(f"Size in memory: {era5_analogues_sign.nbytes / 1024**2:.2f} MB")
 
     # IFS
     print('Now calculating for IFS')
@@ -102,6 +103,7 @@ if __name__ == '__main__':
         dask_gufunc_kwargs={"output_sizes": {"percentile": 2}}
         )
     ifs_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/ifs_tp_sign_map.nc')
+    # print(f"Size in memory: {ifs_sign.nbytes / 1024**2:.2f} MB")
 
     # MICAS
     print('Now calculating for MICAS')
@@ -114,3 +116,4 @@ if __name__ == '__main__':
         output_core_dims=[["percentile"]],
     )
     micas_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/micas_tp_sign_map.nc')
+    # print(f"Size in memory: {micas_sign.nbytes / 1024**2:.2f} MB")
