@@ -49,13 +49,7 @@ if __name__ == '__main__':
     # pgw['tp'] = (((pgw.tp.sel(time=slice('2023-10-19 00', '2023-10-22 00'))*3*3600).sum(dim='time'))/1e5).sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
 
     # IFS
-    tmp = []
-    base_dir='/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/MED-R/EXP/{}/EU025/sfc/pf'
-    climates = ['1870', '1950', 'present', 'future1']
-    for e, exp in enumerate(['pi', 'pi_1950', 'curr', 'incr']):
-        tmp.append(xr.open_mfdataset(os.path.join(base_dir.format(exp), '*.nc'), engine='netcdf4', preprocess=preproc_ds_v2).expand_dims(climate=[climates[e]]))
-    ifs = xr.concat(tmp, dim='climate')
-    ifs = ifs.sel(latitude=slice(uk[3], uk[2]), longitude=slice(uk[0], uk[1]))
+    ifs = bb.data.Data.get_fba_ifs()
     ifs['tp'] = ((ifs.tp.sel(time='2023-10-22 00') - ifs.tp.sel(time='2023-10-19 00'))*1000)
     ifs['t2m'] = ifs.t2m.sel(time=slice('2023-10-19 00', '2023-10-22 00'), latitude=slice(uk[3], uk[2]), longitude=slice(uk[0], uk[1])).mean(dim='time')
 
