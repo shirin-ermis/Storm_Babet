@@ -337,12 +337,16 @@ class Data():
         Function to import FBA IFS data more easily, same as other methods with dimension "climate" nit .
         """
 
-        # FBA IFS
         tmp = []
-        base_dir='/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/MED-R/EXP/{}/EU025/sfc/pf'
+        base_dir='/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/MED-R/EXP/{}/EU025/sfc/{}'
         climates = ['1870', '1950', 'present', 'future1']
         for e, exp in enumerate(['pi', 'pi_1950', 'curr', 'incr']):
-            tmp.append(xr.open_mfdataset(os.path.join(base_dir.format(exp), '*.nc'), engine='netcdf4', preprocess=Data.preproc_ds_v2).expand_dims(climate=[climates[e]]))
+            tmp.append([])
+            for c in ['cf', 'pf']:
+                dir_path = os.path.join(base_dir.format(exp, c), '*.nc')
+                ds = xr.open_mfdataset(dir_path, engine='netcdf4', preprocess=Data.preproc_ds_v2).get(['tp', 't2m', 'msl', 'tcw'])
+                tmp[e].append(ds.expand_dims(climate=[climates[e]]))
+            tmp[e] = xr.concat(tmp[e], dim='number')
         ifs = xr.concat(tmp, dim='climate')
 
         return ifs
