@@ -53,8 +53,8 @@ if __name__ == '__main__':
     # Load data ---------------------------
 
     # ERA5 analogues
-    era5_analogues = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/ERA5_analogues/analogues_72hour_mean.nc')
-    era5_analogues['tp'] = era5_analogues['tp'].sel(lat=slice(uk[3], uk[2]), lon=slice(uk[0], uk[1]))
+    # era5_analogues = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/ERA5_analogues/analogues_72hour_mean.nc')
+    # era5_analogues['tp'] = era5_analogues['tp'].sel(lat=slice(uk[3], uk[2]), lon=slice(uk[0], uk[1]))
 
     # RACMO analogues - no analoues available atm
     # racmo_tp = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_mean.nc')
@@ -70,8 +70,8 @@ if __name__ == '__main__':
     ifs['tp'] = ((ifs.tp.sel(time='2023-10-22 00') - ifs.tp.sel(time='2023-10-19 00'))*1000)
 
     # MICAS
-    micas = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/access-micas/micas_clean.nc')
-    micas['tp'] = micas.tp.sel(time=slice('2023-10-19 12', '2023-10-21 12'), lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1])).sum(dim='time')*24*3600
+    # micas = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/access-micas/micas_clean.nc')
+    # micas['tp'] = micas.tp.sel(time=slice('2023-10-19 12', '2023-10-21 12'), lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1])).sum(dim='time')*24*3600
 
     # Bootstrapping ------------------------------
     
@@ -89,10 +89,12 @@ if __name__ == '__main__':
     # # print(f"Size in memory: {era5_analogues_sign.nbytes / 1024**2:.2f} MB")
 
     # IFS
+    rechunked = (ifs.tp-ifs.tp.sel(climate='present')).chunk(dict(number=-1))
+    print('Rechunk successful')
     print('Now calculating for IFS')
     bootstrapped = xr.apply_ufunc(
         bootstrap_sample,
-        ifs.tp-ifs.tp.sel(climate='present'),
+        rechunked,
         input_core_dims=[['number']],
         vectorize=True,
         dask="parallelized",
