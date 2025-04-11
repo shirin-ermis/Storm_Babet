@@ -383,3 +383,27 @@ class Data():
         return micas
 
 
+    def clean_array_racmo(tmp1, var_name):
+        # Find all variables that start with "unknown"
+        slp_vars = sorted([var for var in tmp1.data_vars if var.startswith(var_name)])
+
+        # Stack all precipitation variables along the new 'member' dimension
+        msl = xr.concat([tmp1[var] for var in slp_vars], dim="member")
+
+        # Assign member values from 1 to 27
+        msl = msl.assign_coords(member=np.arange(1, len(slp_vars) + 1))
+
+        # Create a new dataset with the combined variable
+        test = xr.Dataset({var_name: msl}, coords={"rlat": tmp1.rlat, "rlon": tmp1.rlon, "member": msl.member, "time": tmp1.time})
+
+        tmp1_ = xr.Dataset(
+            {var_name: (("member", "climate", "time", "lat", "lon"), msl.values)},
+            coords={
+                "lat": test.lat.values[:, 0],
+                "lon": test.lon.values[0, :],
+                "time": test.time.values,
+                "member": test.member.values,
+                "climate": test.climate.values,
+            }
+        )
+        return tmp1_
