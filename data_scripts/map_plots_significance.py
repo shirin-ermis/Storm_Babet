@@ -61,13 +61,13 @@ if __name__ == '__main__':
     # racmo_tp['tp'] = racmo_tp['tp'].sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
 
     # PGW - no ens members available atm
-    # pgw = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW/pgw_clean.nc')
-    # pgw['tp'] = (((pgw.tp.sel(time=slice('2023-10-19 00', '2023-10-22 00'))*3*3600).sum(dim='time'))/1e5).sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
+    pgw = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_clean_ensemble.nc')
+    pgw['tp'] = (((pgw.tp.sel(time=slice('2023-10-19 00', '2023-10-22 00'))*3*3600).sum(dim='time'))/1e5).sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
 
     # IFS
-    ifs = bb.data.Data.get_fba_ifs()
-    ifs = ifs.sel(latitude=slice(uk[3], uk[2]), longitude=slice(uk[0], uk[1]))
-    ifs['tp'] = ((ifs.tp.sel(time='2023-10-22 00') - ifs.tp.sel(time='2023-10-19 00'))*1000)
+    # ifs = bb.data.Data.get_fba_ifs()
+    # ifs = ifs.sel(latitude=slice(uk[3], uk[2]), longitude=slice(uk[0], uk[1]))
+    # ifs['tp'] = ((ifs.tp.sel(time='2023-10-22 00') - ifs.tp.sel(time='2023-10-19 00'))*1000)
 
     # MICAS
     # micas = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/access-micas/micas_clean.nc')
@@ -89,19 +89,19 @@ if __name__ == '__main__':
     # # print(f"Size in memory: {era5_analogues_sign.nbytes / 1024**2:.2f} MB")
 
     # IFS
-    rechunked = (ifs.tp-ifs.tp.sel(climate='present')).chunk(dict(number=-1))
-    print('Rechunk successful')
-    print('Now calculating for IFS')
-    bootstrapped = xr.apply_ufunc(
-        bootstrap_sample,
-        rechunked,
-        input_core_dims=[['number']],
-        vectorize=True,
-        dask="parallelized",
-        output_core_dims=[["percentile"]],
-        dask_gufunc_kwargs={"output_sizes": {"percentile": 2}}
-        )
-    ifs_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/ifs_tp_sign_map.nc')
+    # rechunked = (ifs.tp-ifs.tp.sel(climate='present')).chunk({'number': -1})
+    # print('Rechunk successful')
+    # print('Now calculating for IFS')
+    # bootstrapped = xr.apply_ufunc(
+    #     bootstrap_sample,
+    #     rechunked,
+    #     input_core_dims=[['number']],
+    #     vectorize=True,
+    #     dask="parallelized",
+    #     output_core_dims=[["percentile"]],
+    #     dask_gufunc_kwargs={"output_sizes": {"percentile": 2}}
+    #     )
+    # ifs_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/ifs_tp_sign_map.nc')
     # print(f"Size in memory: {ifs_sign.nbytes / 1024**2:.2f} MB")
 
     # MICAS
@@ -117,7 +117,19 @@ if __name__ == '__main__':
     # micas_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/micas_tp_sign_map.nc')
     # # print(f"Size in memory: {micas_sign.nbytes / 1024**2:.2f} MB")
 
-    # # RACMO
+    # PGW
+    print('Now calculating for PGW')
+    bootstrapped = xr.apply_ufunc(
+        bootstrap_sample,
+        pgw.tp-pgw.tp.sel(climate='present'),
+        input_core_dims=[['member']],
+        vectorize=True,
+        dask="parallelized",
+        output_core_dims=[["percentile"]],
+    )
+    pgw_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/pgw_tp_sign_map.nc')
+
+    # RACMO
     # print('Now calculating for RACMO')
     # bootstrapped = xr.apply_ufunc(
     #     bootstrap_sample,
