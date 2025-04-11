@@ -344,7 +344,7 @@ class Data():
             tmp.append([])
             for c in ['cf', 'pf']:
                 dir_path = os.path.join(base_dir.format(exp, c), '*.nc')
-                ds = xr.open_mfdataset(dir_path, engine='netcdf4', preprocess=Data.preproc_ds_v2).get(['tp', 't2m', 'msl', 'tcw'])
+                ds = xr.open_mfdataset(dir_path, engine='netcdf4', preprocess=Data.preproc_ds_v2).get(['tp', 't2m', 'msl', 'tcwv'])
                 tmp[e].append(ds.expand_dims(climate=[climates[e]]))
             tmp[e] = xr.concat(tmp[e], dim='number')
         ifs = xr.concat(tmp, dim='climate')
