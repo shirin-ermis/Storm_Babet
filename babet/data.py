@@ -407,3 +407,63 @@ class Data():
             }
         )
         return tmp1_
+    
+    def get_pgw_ensemble():
+            # check if file exists
+            if not os.path.exists('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_clean_ensemble.nc'):
+                # mean sea level pressure
+                tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_slp_PGW+1.nc').expand_dims(climate=["1870"])
+                tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_slp_CTL.nc').expand_dims(climate=["present"])
+                tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_slp_PGW+1.nc').expand_dims(climate=["future1"])
+                
+                tmp4dry = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_slp_PGWdry+3.nc').expand_dims(dummy=["dry"])
+                tmp4wet = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_slp_PGWwet+3.nc').expand_dims(dummy=["wet"])
+                tmp4 = xr.concat([tmp4dry, tmp4wet], dim="dummy").mean("dummy").squeeze().expand_dims(climate=["future2"])
+
+                tmp1_ = Data.clean_array_racmo(tmp1, var_name="msl")
+                tmp2_ = Data.clean_array_racmo(tmp2 , var_name="msl")
+                tmp3_ = Data.clean_array_racmo(tmp3, var_name="msl")
+                tmp4_ = Data.clean_array_racmo(tmp4, var_name="msl")
+                pgw_ens = xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate")
+
+                # precip
+                tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_pr_PGW-1.nc').expand_dims(climate=["1870"])
+                tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_pr_CTL.nc').expand_dims(climate=["present"])
+                tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_pr_PGW+1.nc').expand_dims(climate=["future1"])
+                
+                tmp4dry = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_pr_PGWdry+3.nc').expand_dims(dummy=["dry"])
+                tmp4wet = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_pr_PGWwet+3.nc').expand_dims(dummy=["wet"])
+                tmp4 = xr.concat([tmp4dry, tmp4wet], dim="dummy").mean("dummy").squeeze().expand_dims(climate=["future2"])
+
+                tmp1_ = Data.clean_array_racmo(tmp1, var_name="unknown")
+                tmp2_ = Data.clean_array_racmo(tmp2, var_name="unknown")
+                tmp3_ = Data.clean_array_racmo(tmp3, var_name="unknown")
+                tmp4_ = Data.clean_array_racmo(tmp4, var_name="unknown")
+                pgw_ens = xr.merge([pgw_ens, 
+                                    xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate").rename({"unknown": "tp"})], 
+                                    compat="override")
+                
+                # temperature
+                tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_t2m_PGW-1.nc').expand_dims(climate=["1870"])
+                tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_t2m_CTL.nc').expand_dims(climate=["present"])
+                tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_t2m_PGW+1.nc').expand_dims(climate=["future1"])
+                
+                tmp4dry = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_t2m_PGWdry+3.nc').expand_dims(dummy=["dry"])
+                tmp4wet = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_t2m_PGWwet+3.nc').expand_dims(dummy=["wet"])
+                tmp4 = xr.concat([tmp4dry, tmp4wet], dim="dummy").mean("dummy").squeeze().expand_dims(climate=["future2"])
+                
+                tmp1_ = Data.clean_array_racmo(tmp1, var_name="t2m")
+                tmp2_ = Data.clean_array_racmo(tmp2, var_name="t2m")
+                tmp3_ = Data.clean_array_racmo(tmp3, var_name="t2m")
+                tmp4_ = Data.clean_array_racmo(tmp4, var_name="t2m")
+                pgw_ens = xr.merge([pgw_ens, 
+                                    xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate")], 
+                                    compat="override")
+
+                # Save to netcdf
+                pgw_ens.to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_clean_ensemble.nc')
+            else:
+                print('Importing data from pre-existing file')
+                pgw_ens = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_clean_ensemble.nc')
+
+            return pgw_ens
