@@ -52,6 +52,10 @@ if __name__ == '__main__':
 
     # Load data ---------------------------
 
+    # PGW 
+    # pgw_ens = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_clean_ensemble.nc')
+    # pgw_ens['tp'] = (((pgw_ens.tp.sel(time=slice('2023-10-19 00', '2023-10-22 00'))*3*3600).sum(dim='time'))/1e5).sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
+
     # ERA5 analogues
     # era5_analogues = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/ERA5_analogues/analogues_72hour_mean.nc')
     # era5_analogues['tp'] = era5_analogues['tp'].sel(lat=slice(uk[3], uk[2]), lon=slice(uk[0], uk[1]))
@@ -74,7 +78,8 @@ if __name__ == '__main__':
     # micas['tp'] = micas.tp.sel(time=slice('2023-10-19 12', '2023-10-21 12'), lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1])).sum(dim='time')*24*3600
 
     # RACMO
-    racmo_tp = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_mean.nc')
+    # racmo_tp = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_mean.nc')
+    # print(racmo_tp.dims)
 
     # Bootstrapping ------------------------------
     
@@ -124,7 +129,7 @@ if __name__ == '__main__':
     # print('Now calculating for PGW')
     # bootstrapped = xr.apply_ufunc(
     #     bootstrap_sample,
-    #     pgw.tp-pgw.tp.sel(climate='present'),
+    #     pgw_ens.tp-pgw_ens.tp.sel(climate='present'),
     #     input_core_dims=[['member']],
     #     vectorize=True,
     #     dask="parallelized",
@@ -133,12 +138,12 @@ if __name__ == '__main__':
     # pgw_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/pgw_tp_sign_map.nc')
 
     # RACMO
-    print('Now calculating for RACMO')
-    bootstrapped = xr.apply_ufunc(
-        bootstrap_sample,
-        racmo_tp.tp-racmo_tp.tp.sel(climate='present'),
-        input_core_dims=[['member']],
-        vectorize=True,
-        dask="parallelized",
-        output_core_dims=[["percentile"]],
-    )
+    # print('Now calculating for RACMO')
+    # bootstrapped = xr.apply_ufunc(
+    #     bootstrap_sample,
+    #     racmo_tp.tp-racmo_tp.tp.sel(climate='present'),
+    #     input_core_dims=[['member']],
+    #     vectorize=True,
+    #     dask="parallelized",
+    #     output_core_dims=[["percentile"]],
+    # )
