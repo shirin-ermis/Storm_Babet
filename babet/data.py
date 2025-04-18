@@ -363,6 +363,7 @@ class Data():
             tmp.append([])
             for c in ['cf', 'pf']:
                 dir_path = os.path.join(base_dir.format(exp, c), '*.nc')
+                print(dir_path)
                 ds = xr.open_mfdataset(dir_path, engine='netcdf4', preprocess=Data.preproc_ds_v2).get(['t2m'])
                 tmp[e].append(ds.expand_dims(climate=[climates[e]]))
             tmp[e] = xr.concat(tmp[e], dim='number')
@@ -486,3 +487,58 @@ class Data():
                 pgw_ens = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_clean_ensemble.nc')
 
             return pgw_ens
+    
+    def get_racmo_indiv_analogues():
+        # check if file exists
+        if not os.path.exists('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_msl_72hour_analogues.nc'):
+            # MSLP
+            tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_ECEARTH__mslp__1951-1980_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["1950"])
+            tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_ECEARTH__mslp__1991-2020_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["present"])
+            tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_ECEARTH__mslp__2071-2100_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["future1"])
+            tmp4 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_ECEARTH__mslp__2071-2100_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["future2"])
+
+
+            racmo_msl = xr.concat([tmp1, tmp2, tmp3, tmp4], dim='climate').groupby('ana').mean(dim='ana').rename_dims({'ana': 'member'}).rename({"mslp": "msl"})
+
+            # precipitation
+            tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__1951-1980_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["1950"])
+            tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__1991-2020_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["present"])
+            tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__2071-2100_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["future1"])
+            tmp4 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__2071-2100_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["future2"])
+
+            tmp1 = tmp1.groupby('ana').mean(dim='ana')
+            tmp2 = tmp2.groupby('ana').mean(dim='ana')
+            tmp3 = tmp3.groupby('ana').mean(dim='ana')
+            tmp4 = tmp4.groupby('ana').mean(dim='ana')
+
+            tmp1_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp1.precip.values)},
+                            coords={"climate": tmp1.climate.values,
+                                    "lat": tmp1.lat.values[:,0], 
+                                    "lon": tmp1.lon.values[0,:], 
+                                    "member": tmp1.ana.values})
+            tmp2_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp2.precip.values)},
+                            coords={"climate": tmp2.climate.values,
+                                    "lat": tmp2.lat.values[:,0], 
+                                    "lon": tmp2.lon.values[0,:], 
+                                    "member": tmp2.ana.values})
+            tmp3_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp3.precip.values)},
+                            coords={"climate": tmp3.climate.values,
+                                    "lat": tmp3.lat.values[:,0], 
+                                    "lon": tmp3.lon.values[0,:], 
+                                    "member": tmp3.ana.values})
+            tmp4_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp4.precip.values)},
+                            coords={"climate": tmp4.climate.values,
+                                    "lat": tmp4.lat.values[:,0], 
+                                    "lon": tmp4.lon.values[0,:], 
+                                    "member": tmp4.ana.values})
+            racmo_tp = xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate")
+
+            # Save file in two parts because lat lon are not compatible
+            racmo_msl.to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_msl_72hour_analogues.nc')
+            racmo_tp.to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_analogues.nc')
+        else:
+            print('Importing data from pre-existing file')
+            racmo_msl = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_msl_72hour_analogues.nc')
+            racmo_tp = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_analogues.nc')
+        
+        return racmo_msl, racmo_tp
