@@ -208,7 +208,7 @@ class Data():
             # mslp
             tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_RACMO_2023-10-20_use27_stat_AmeanprSCOT_NC_mslp_1951-1980.nc').expand_dims(climate=["1950"])
             tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_RACMO_2023-10-20_use27_stat_AmeanprSCOT_NC_mslp_1991-2020.nc').expand_dims(climate=["present"])
-            tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_RACMO_2023-10-20_use27_stat_AmeanprSCOT_NC_mslp_2071-2100.nc').expand_dims(climate=["future1"])
+            tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_RACMO_2023-10-20_use27_stat_AmeanprSCOT_NC_mslp_2071-2100.nc').expand_dims(climate=["future2"])
             racmo_msl = xr.concat([tmp1, tmp2, tmp3], dim="climate").rename({"mslp": "msl"})
 
             # precip
@@ -222,7 +222,7 @@ class Data():
                         coords={"lat": tmp2.lat.values[:,0], 
                                 "lon": tmp2.lon.values[0,:],
                                 "climate": tmp2.climate.values})
-            tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_RACMO_2023-10-20_use27_stat_AmeanprSCOT_NC_precip_2071-2100.nc').expand_dims(climate=["future1"])
+            tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_RACMO_2023-10-20_use27_stat_AmeanprSCOT_NC_precip_2071-2100.nc').expand_dims(climate=["future2"])
             tmp3_= xr.Dataset({"tp": (("climate", "lat", "lon"), tmp3.precip.values)},
                         coords={"lat": tmp3.lat.values[:,0], 
                                 "lon": tmp3.lon.values[0,:],
