@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 import glob
+import xesmf as xe
 
 
 class Data():
@@ -403,6 +404,19 @@ class Data():
         return micas
 
 
+    def regrid_racmo(ds):
+        ds_out = xr.Dataset(
+            {
+                "lat": (["lat"], ds.lat[:,0].values),
+                "lon": (["lon"], ds.lon[0,:].values),
+            }
+        )
+
+        regridder = xe.Regridder(ds, ds_out, "bilinear")
+
+        regridded_data = regridder(ds)
+        return regridded_data
+    
     def clean_array_racmo(tmp1, var_name):
         # Find all variables that start with "unknown"
         slp_vars = sorted([var for var in tmp1.data_vars if var.startswith(var_name)])
@@ -416,16 +430,7 @@ class Data():
         # Create a new dataset with the combined variable
         test = xr.Dataset({var_name: msl}, coords={"rlat": tmp1.rlat, "rlon": tmp1.rlon, "member": msl.member, "time": tmp1.time})
 
-        tmp1_ = xr.Dataset(
-            {var_name: (("member", "climate", "time", "lat", "lon"), msl.values)},
-            coords={
-                "lat": test.lat.values[:, 0],
-                "lon": test.lon.values[0, :],
-                "time": test.time.values,
-                "member": test.member.values,
-                "climate": test.climate.values,
-            }
-        )
+        tmp1_ = Data.regrid_racmo(test)
         return tmp1_
     
     def get_pgw_ensemble():
