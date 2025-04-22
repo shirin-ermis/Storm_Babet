@@ -516,26 +516,10 @@ class Data():
             tmp3 = tmp3.groupby('ana').mean(dim='ana')
             tmp4 = tmp4.groupby('ana').mean(dim='ana')
 
-            tmp1_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp1.precip.values)},
-                            coords={"climate": tmp1.climate.values,
-                                    "lat": tmp1.lat.values[:,0], 
-                                    "lon": tmp1.lon.values[0,:], 
-                                    "member": tmp1.ana.values})
-            tmp2_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp2.precip.values)},
-                            coords={"climate": tmp2.climate.values,
-                                    "lat": tmp2.lat.values[:,0], 
-                                    "lon": tmp2.lon.values[0,:], 
-                                    "member": tmp2.ana.values})
-            tmp3_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp3.precip.values)},
-                            coords={"climate": tmp3.climate.values,
-                                    "lat": tmp3.lat.values[:,0], 
-                                    "lon": tmp3.lon.values[0,:], 
-                                    "member": tmp3.ana.values})
-            tmp4_ = xr.Dataset({"tp": (("member", "climate", "lat", "lon"), tmp4.precip.values)},
-                            coords={"climate": tmp4.climate.values,
-                                    "lat": tmp4.lat.values[:,0], 
-                                    "lon": tmp4.lon.values[0,:], 
-                                    "member": tmp4.ana.values})
+            tmp1_ = Data.regrid_racmo(tmp1).rename_dims({'ana': 'member'}).rename({"precip": "tp"})
+            tmp2_ = Data.regrid_racmo(tmp2).rename_dims({'ana': 'member'}).rename({"precip": "tp"})
+            tmp3_ = Data.regrid_racmo(tmp3).rename_dims({'ana': 'member'}).rename({"precip": "tp"})
+            tmp4_ = Data.regrid_racmo(tmp4).rename_dims({'ana': 'member'}).rename({"precip": "tp"})
             racmo_tp = xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate")
 
             # Save file in two parts because lat lon are not compatible
