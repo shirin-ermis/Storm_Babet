@@ -61,12 +61,9 @@ if __name__ == '__main__':
     # era5_analogues['tp'] = era5_analogues['tp'].sel(lat=slice(uk[3], uk[2]), lon=slice(uk[0], uk[1]))
 
     # RACMO analogues - no analoues available atm
-    # racmo_tp = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_mean.nc')
-    # racmo_tp['tp'] = racmo_tp['tp'].sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
-
-    # PGW - no ens members available atm
-    # pgw = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_ensemble/pgw_clean_ensemble.nc')
-    # pgw['tp'] = (((pgw.tp.sel(time=slice('2023-10-19 00', '2023-10-22 00'))*3*3600).sum(dim='time'))/1e5).sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
+    _ , racmo_tp = bb.data.Data.get_racmo_indiv_analogues()
+    racmo_tp['tp'] = racmo_tp['tp'].sel(lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1]))
+    print(racmo_tp.tp.dims)
 
     # IFS
     # ifs = bb.data.Data.get_fba_ifs()
@@ -76,10 +73,6 @@ if __name__ == '__main__':
     # MICAS
     # micas = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/access-micas/micas_clean.nc')
     # micas['tp'] = micas.tp.sel(time=slice('2023-10-19 12', '2023-10-21 12'), lat=slice(uk[2], uk[3]), lon=slice(uk[0], uk[1])).sum(dim='time')*24*3600
-
-    # RACMO
-    # racmo_tp = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_mean.nc')
-    # print(racmo_tp.dims)
 
     # Bootstrapping ------------------------------
     
@@ -138,12 +131,13 @@ if __name__ == '__main__':
     # pgw_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/pgw_tp_sign_map.nc')
 
     # RACMO
-    # print('Now calculating for RACMO')
-    # bootstrapped = xr.apply_ufunc(
-    #     bootstrap_sample,
-    #     racmo_tp.tp-racmo_tp.tp.sel(climate='present'),
-    #     input_core_dims=[['member']],
-    #     vectorize=True,
-    #     dask="parallelized",
-    #     output_core_dims=[["percentile"]],
-    # )
+    print('Now calculating for RACMO')
+    bootstrapped = xr.apply_ufunc(
+        bootstrap_sample,
+        racmo_tp.tp-racmo_tp.tp.sel(climate='present'),
+        input_core_dims=[['member']],
+        vectorize=True,
+        dask="parallelized",
+        output_core_dims=[["percentile"]],
+    )
+    racmo_sign = bootstrapped.assign_coords(percentile=[2.5, 97.5]).to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/significance/racmo_tp_sign_map.nc')
