@@ -503,18 +503,13 @@ class Data():
             tmp4 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_ECEARTH__mslp__2071-2100_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["future2"])
 
 
-            racmo_msl = xr.concat([tmp1, tmp2, tmp3, tmp4], dim='climate').groupby('ana').mean(dim='ana').rename_dims({'ana': 'member'}).rename({"mslp": "msl"})
+            racmo_msl = xr.concat([tmp1, tmp2, tmp3, tmp4], dim='climate').rename_dims({'ana': 'member'}).rename({"mslp": "msl"})
 
             # precipitation
             tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__1951-1980_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["1950"])
             tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__1991-2020_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["present"])
             tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__2071-2100_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["future1"])
             tmp4 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogs_Babet_A20231020_KNMI_RACMO__precip__2071-2100_3dy_ave.nc').swap_dims({'time': 'ana'}).expand_dims(climate=["future2"])
-
-            tmp1 = tmp1.groupby('ana').mean(dim='ana')
-            tmp2 = tmp2.groupby('ana').mean(dim='ana')
-            tmp3 = tmp3.groupby('ana').mean(dim='ana')
-            tmp4 = tmp4.groupby('ana').mean(dim='ana')
 
             tmp1_ = Data.regrid_racmo(tmp1).rename_dims({'ana': 'member'}).rename({"precip": "tp"})
             tmp2_ = Data.regrid_racmo(tmp2).rename_dims({'ana': 'member'}).rename({"precip": "tp"})
