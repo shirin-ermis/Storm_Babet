@@ -6,13 +6,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from cmcrameri import cm
 import cartopy.crs as ccrs
+from metpy import calc as mpcalc
+from metpy.units import units
 import cartopy.feature as cfeature
 from vert_integrated_advection_09 import combine_xarray_dict
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
-def calc_average_w(ds, lower=850, upper=250):
+def calc_average_w(ds, lower=850, upper=250, omega=True):
     
     ds = ds.copy(deep=True).sel(level=slice(upper, lower))
+
+    # Calculate vertical velocity (w, mm/s) from omega (Pa/s) if omega is True
+    if omega:
+        ds['w'] = (mpcalc.vertical_velocity(ds['w']* units('Pa/s'), ds['level']* units.hPa, ds['t']* units.kelvin)*1000)  # Convert from m/s to mm/s
     
     # Compute the pressure thickness (ΔP) between levels
     # The last dimension should be the pressure dimension
@@ -101,7 +107,7 @@ if __name__ == '__main__':
     # Calculate the mass-weighted average vertical velocity
     starttime = '2023-10-19 00'
     endtime = '2023-10-22 00'
-    exp = {exp_key: integate_qs(calc_average_w(exp[exp_key])) for exp_key in exp.keys()}
+    exp = {exp_key: integate_qs(calc_average_w(exp[exp_key], omega=True)) for exp_key in exp.keys()}
     Q_s_dict = {exp_key: {ini_key: (exp[exp_key]-exp['curr']).Q_s.sel(inidate=ini_key, time=slice(starttime, endtime)).mean(dim=['time', 'number']).squeeze() for ini_key in ['2023-10-15', '2023-10-17']} for exp_key in exp.keys()}
     w_dict = {exp_key: {ini_key: (exp[exp_key]-exp['curr']).mass_weighted_w.sel(inidate=ini_key, time=slice(starttime, endtime)).mean(dim=['time', 'number']).squeeze() for ini_key in ['2023-10-15', '2023-10-17']} for exp_key in exp.keys()}
 
