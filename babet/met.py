@@ -75,7 +75,9 @@ class Met():
         return earth_radius * 2 * np.arcsin(np.sqrt(a))
     
     def calc_vert_velocity_average(w, levels, temperature, Pa_to_mm=True,
-                                   upper=200, lower=850): 
+                                   upper=250, lower=850): 
+        
+        g = 9.81
         
         # look out for unites of temperature and pressure!
         assert(temperature.mean().values > 200, 'Temperature needs to be in K')
@@ -84,6 +86,8 @@ class Met():
         # convert to mm
         if Pa_to_mm:
             vert_w = mpcalc.vertical_velocity(w*units('Pa/s'), levels*units('hPa'), temperature*units('K'))
+        else:
+            vert_w = w
 
         # mass weighted mean
         delta_p = vert_w.level.diff('level').rename('delta_p')
