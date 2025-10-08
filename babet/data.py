@@ -417,18 +417,35 @@ class Data():
         regridded_data = regridder(ds)
         return regridded_data
     
-    def clean_array_racmo(tmp1, var_name):
+    def clean_array_racmo(tmp1, var_name, var=None):
+
+        # If var is not provided, use var_name
+        if var is None:
+            var = var_name
+        
         # Find all variables that start with "unknown"
-        slp_vars = sorted([var for var in tmp1.data_vars if var.startswith(var_name)])
+        slp_vars = sorted([data_var for data_var in tmp1.data_vars if data_var.startswith(var)])
 
-        # Stack all precipitation variables along the new 'member' dimension
-        msl = xr.concat([tmp1[var] for var in slp_vars], dim="member")
+        # Rename 'mem' dimension to 'member' if it exists
+        if 'mem' in tmp1.dims:
+            tmp1 = tmp1.rename({'mem': 'member'})
 
-        # Assign member values from 1 to 27
-        msl = msl.assign_coords(member=np.arange(1, len(slp_vars) + 1))
+        # Stack all precipitation variables along the new 'member' dimension, if already done, do nothing
+        if len(slp_vars) == 1:
+            msl = tmp1[slp_vars[0]]
+        else:
+            msl = xr.concat([tmp1[var] for var in slp_vars], dim="member")
+            msl = msl.assign_coords(member=np.arange(1, len(slp_vars) + 1))
+        
+        # remove height dimension if it exists
+        if 'height' in msl.dims:
+            msl = msl.squeeze('height', drop=True)
 
         # Create a new dataset with the combined variable
-        test = xr.Dataset({var_name: msl}, coords={"rlat": tmp1.rlat, "rlon": tmp1.rlon, "member": msl.member, "time": tmp1.time})
+        if 'time' in tmp1.coords:
+            test = xr.Dataset({var_name: msl}, coords={"lat": tmp1.lat, "lon": tmp1.lon, "member": msl.member, "time": tmp1.time})
+        else:
+            test = xr.Dataset({var_name: msl}, coords={"rlat": tmp1.rlat, "rlon": tmp1.rlon, "member": msl.member})
 
         tmp1_ = Data.regrid_racmo(test)
         return tmp1_
@@ -526,3 +543,48 @@ class Data():
             racmo_tp = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/RACMO_analogues/analogues_tp_72hour_analogues.nc')
         
         return racmo_msl, racmo_tp
+    
+    def get_pgw_new_runs():
+        
+            # check if file exists
+            if not os.path.exists('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/pgw_clean_ensemble_new_runs.nc'):
+                # mean sea level pressure
+                tmp1 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/single_level_jexp4_expid_-1.5K.nc').expand_dims(climate=["1870"])
+                tmp2 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/single_level_jexp0_expid_CTL.nc').expand_dims(climate=["present"])
+                tmp3 = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/single_level_jexp1_expid_+1.5K.nc').expand_dims(climate=["future1"])
+                
+                tmp4dry = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/single_level_jexp2_expid_+3.0Kd.nc').expand_dims(dummy=["dry"])
+                tmp4wet = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/single_level_jexp3_expid_+3.0Kw.nc').expand_dims(dummy=["wet"])
+                tmp4 = xr.concat([tmp4dry, tmp4wet], dim="dummy").mean("dummy").squeeze().expand_dims(climate=["future2"])
+
+                tmp1_ = Data.clean_array_racmo(tmp1, var_name="msl")
+                tmp2_ = Data.clean_array_racmo(tmp2 , var_name="msl")
+                tmp3_ = Data.clean_array_racmo(tmp3, var_name="msl")
+                tmp4_ = Data.clean_array_racmo(tmp4, var_name="msl")
+                pgw_ens = xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate", coords="minimal", compat="override")
+
+                # precip
+                tmp1_ = Data.clean_array_racmo(tmp1, var_name="tp", var="precip")
+                tmp2_ = Data.clean_array_racmo(tmp2, var_name="tp", var="precip")
+                tmp3_ = Data.clean_array_racmo(tmp3, var_name="tp", var="precip")
+                tmp4_ = Data.clean_array_racmo(tmp4, var_name="tp", var="precip")
+                pgw_ens = xr.merge([pgw_ens, 
+                                    xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate", coords="minimal", compat="override")],
+                                    compat="override")
+                
+                # qvi
+                tmp1_ = Data.clean_array_racmo(tmp1, var_name="qvi")
+                tmp2_ = Data.clean_array_racmo(tmp2, var_name="qvi")
+                tmp3_ = Data.clean_array_racmo(tmp3, var_name="qvi")
+                tmp4_ = Data.clean_array_racmo(tmp4, var_name="qvi")
+                pgw_ens = xr.merge([pgw_ens, 
+                                    xr.concat([tmp1_, tmp2_, tmp3_, tmp4_], dim="climate", coords="minimal", compat="override")], 
+                                    compat="override")
+
+                # Save to netcdf
+                pgw_ens.to_netcdf('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/pgw_clean_ensemble_new_runs.nc')
+            else:
+                print('Importing data from pre-existing file')
+                pgw_ens = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/PGW_new_runs/pgw_clean_ensemble_new_runs.nc')
+            
+            return pgw_ens
