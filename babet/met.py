@@ -85,8 +85,10 @@ class Met():
 
         # convert to mm
         if Pa_to_mm:
+            print('Converting vertical velocity from Pa/s to mm/s')
             vert_w = mpcalc.vertical_velocity(w*units('Pa/s'), levels*units('hPa'), temperature*units('K'))
         else:
+            print('Not converting vertical velocity units')
             vert_w = w
 
         # mass weighted mean

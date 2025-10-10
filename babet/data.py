@@ -335,7 +335,7 @@ class Data():
     
     def get_fba_ifs():
         """
-        Function to import FBA IFS data more easily, same as other methods with dimension "climate" nit .
+        Function to import FBA IFS data more easily, same as other methods with dimension "climate"
         """
 
         tmp = []
@@ -352,6 +352,20 @@ class Data():
 
         return ifs
     
+    def get_fba_ifs_pl():
+        """
+        Function to import FBA IFS data more easily, same as other methods with dimension "climate", pressure level data
+        # TODO need to download cf data and include in script
+        """
+
+        if os.path.exists('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/av_w/ifs_dynamics.nc'):
+            print('Importing data from pre-existing file')
+            ifs_pl = xr.open_dataset('/gf5/predict/AWH019_ERMIS_ATMICP/Babet/DATA/postproc/av_w/ifs_dynamics.nc')
+        else:
+            print('need to run slurm script data_scripts/ifs_dynamics.job to process the data first')
+
+        return ifs_pl
+
     def get_global_ifs():
         """
         Function to import FBA IFS data more easily, same as other methods with dimension "climate" nit .
